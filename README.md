@@ -12,9 +12,12 @@ This repository contains the full research pipeline for fine-tuning Meta's **NLL
 | Checkpoint 3,500 | 3,500 | ~56,000 | 42.87 | 62.22 |
 | Checkpoint 7,500 | 7,500 | ~120,000 | 43.42 | 63.05 |
 | Phase 1 Final — Checkpoint 12,000 | 12,000 | ~192,000 | 43.37 | 63.16 |
-| **Phase 2 Final — Checkpoint 1,355** | +1,355 human steps | +21,655 human sentences | **41.99** | **61.21** |
+| **Phase 2 Final — Checkpoint 1,355** | +1,355 steps (5 epochs × 271 steps/epoch) | 4,331 unique human sentences × 5 epochs | **41.99** | **61.21** |
 
 All scores were measured on the same held-out test set of 500 synthetic sentences from the GhanaNLP Pristine dataset (rows 500,000+), which were not seen during either phase of training. The Phase 2 model incurs a modest **1.38 BLEU point reduction** on the synthetic benchmark — a well-documented trade-off in human alignment, where the model partially shifts its output distribution away from the regularised synthetic style toward more naturalistic phrasing. The headline improvement over the zero-shot baseline remains **+23.05 BLEU points** (+121%).
+
+> **Checkpoint naming:** Phase 2 used a gradient accumulation of 16 steps with a batch size of 1 on a 4,331-sentence dataset, yielding approximately 271 optimisation steps per epoch. After 5 epochs this totals 1,355 steps, which is reflected in the checkpoint name. The model was initialised from the Phase 1 checkpoint-12000 adapter and refined on the human corpus — it is not a fresh model.
+
 
 
 ---
