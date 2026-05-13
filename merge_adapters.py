@@ -1,4 +1,3 @@
-import gc
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel, prepare_model_for_kbit_training
@@ -8,7 +7,11 @@ from tqdm import tqdm
 import os
 
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
-PHASE1_DIR = "F:/twi_translation_model/checkpoint-12000"
+
+# lora_adapter contains the clean LoRA-only weights saved at the end of Phase 1.
+# checkpoint-12000 is a full Trainer checkpoint (includes quantized base weights)
+# and cannot be loaded as a raw state dict.
+PHASE1_LORA_DIR = "F:/twi_translation_model/lora_adapter"
 PHASE2_DIR = "F:/twi_translation_model_human/checkpoint-1355"
 
 SRC_LANG = "aka_GH"
@@ -47,22 +50,29 @@ def evaluate(model):
     return BLEU().corpus_score(hypotheses, [references]), CHRF(word_order=2).corpus_score(hypotheses, [references])
 
 
-# Load Phase 1 adapter weights directly from disk to CPU — no full model needed.
-# LoRA adapter files are only a few MB, so this fits comfortably in RAM.
-print(f"Loading Phase 1 LoRA weights from disk (CPU only)...")
-p1_bin = os.path.join(PHASE1_DIR, "adapter_model.bin")
-p1_safe = os.path.join(PHASE1_DIR, "adapter_model.safetensors")
+# Load Phase 1 LoRA weights directly from disk to CPU.
+# This reads only the small adapter file, not the full quantized model.
+print(f"Loading Phase 1 LoRA weights from {PHASE1_LORA_DIR}...")
+p1_safe = os.path.join(PHASE1_LORA_DIR, "adapter_model.safetensors")
+p1_bin  = os.path.join(PHASE1_LORA_DIR, "adapter_model.bin")
 
 if os.path.exists(p1_safe):
     from safetensors.torch import load_file
-    p1_weights = load_file(p1_safe, device="cpu")
+    p1_raw = load_file(p1_safe, device="cpu")
+elif os.path.exists(p1_bin):
+    p1_raw = torch.load(p1_bin, map_location="cpu")
 else:
-    p1_weights = torch.load(p1_bin, map_location="cpu")
+    raise FileNotFoundError(f"No adapter_model file found in {PHASE1_LORA_DIR}")
 
-print(f"Phase 1 adapter has {len(p1_weights)} LoRA tensors")
+# Keep only the actual trainable LoRA parameter tensors
+p1_weights = {k: v for k, v in p1_raw.items() if "lora_A" in k or "lora_B" in k}
+print(f"  Found {len(p1_weights)} LoRA tensors (lora_A + lora_B)")
+if len(p1_weights) == 0:
+    print("  ERROR: No LoRA keys found. Check that PHASE1_LORA_DIR points to the adapter folder.")
+    raise SystemExit
 
-# Load ONE model (Phase 2) into VRAM — this is the only model kept in GPU memory.
-print(f"Loading Phase 2 model into VRAM from {PHASE2_DIR}...")
+# Load Phase 2 model into VRAM — the only model kept in GPU memory throughout.
+print(f"Loading Phase 2 model from {PHASE2_DIR}...")
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_compute_dtype=torch.float16,
@@ -72,16 +82,24 @@ base = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, quantization_config=bnb
 base = prepare_model_for_kbit_training(base)
 model = PeftModel.from_pretrained(base, PHASE2_DIR, is_trainable=True)
 
-# Save Phase 2 LoRA weights as the baseline to restore between evaluations
-p2_weights = {k: v.clone().cpu() for k, v in model.state_dict().items() if "lora" in k}
-print(f"Phase 2 adapter has {len(p2_weights)} LoRA tensors")
+# Snapshot Phase 2 LoRA weights so we can restore them between alpha evaluations
+p2_weights = {k: v.clone().cpu() for k, v in model.state_dict().items() if "lora_A" in k or "lora_B" in k}
+print(f"  Found {len(p2_weights)} LoRA tensors in Phase 2 model")
+
+# Verify key overlap
+common = set(p1_weights.keys()) & set(p2_weights.keys())
+print(f"  Matching keys between Phase 1 and Phase 2: {len(common)}")
+if len(common) == 0:
+    print("  WARNING: No matching LoRA keys found. Printing both key sets for debugging:")
+    print("  Phase 1 keys:", list(p1_weights.keys())[:5])
+    print("  Phase 2 keys:", list(p2_weights.keys())[:5])
+    raise SystemExit
 
 
 def apply_merge(alpha):
     state = model.state_dict()
-    for k in p2_weights:
-        if k in p1_weights:
-            state[k] = (alpha * p1_weights[k].to(model.device) + (1 - alpha) * p2_weights[k].to(model.device))
+    for k in common:
+        state[k] = alpha * p1_weights[k].to(model.device) + (1 - alpha) * p2_weights[k].to(model.device)
     model.load_state_dict(state)
 
 
@@ -111,5 +129,4 @@ for alpha in ALPHAS:
         best_alpha = alpha
     restore_phase2()
 
-print(f"\n--- Best: alpha={best_alpha}  BLEU={best_bleu:.2f} ---")
-print(f"    To deploy this blend, rerun apply_merge({best_alpha}) and save the model.")
+print(f"\n--- Best merge: alpha={best_alpha}  BLEU={best_bleu:.2f} ---")
