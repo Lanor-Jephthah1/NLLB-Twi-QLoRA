@@ -17,6 +17,20 @@ A BLEU score above 40 is recognized in the machine translation literature as ind
 
 ---
 
+## Data Sources & Acknowledgements
+
+This project would not have been possible without the foundational work of the **GhanaNLP community**.
+
+**Phase 1 — Synthetic Corpus:**
+The large-scale synthetic training data was sourced from the [GhanaNLP Pristine Twi-English Parallel Sentences](https://huggingface.co/datasets/ghananlpcommunity/pristine-twi-english-parallel-sentences) dataset, a corpus of approximately 15.6 million parallel sentence pairs generated via the Gemini API. We are grateful to the GhanaNLP team for making this resource publicly available and for their sustained contributions to African NLP infrastructure.
+
+**Phase 2 — Human-Curated Corpus:**
+The 4,331-sentence human-verified dataset (`data/train.csv`) used in the refinement phase was curated from the same GhanaNLP corpus and verified for correctness, naturalness, and cultural accuracy. This dataset is included in this repository for full reproducibility.
+
+> GhanaNLP: https://ghananlp.org | Hugging Face: https://huggingface.co/ghananlpcommunity
+
+---
+
 ## Trained Model
 
 The final human-polished LoRA adapter will be published to the Hugging Face Hub upon completion of Phase 2 training. The adapter is approximately 15MB. At inference time, it merges automatically with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB) which loads directly from the Hugging Face Hub.
@@ -145,11 +159,22 @@ A Gradio-based inference interface was built with custom Twi orthography normali
 ├── visualize_attention.py        # Cross-attention extraction and heatmap generation
 ├── plot_history.py               # Local loss curve plotting from trainer_state.json
 ├── translate_playground.py       # Interactive CLI for real-time translation testing
+├── data/
+│   └── train.csv                    # 4,331 human-verified Twi-English sentence pairs (Phase 2)
 ├── metrics/
 │   └── trainer_state_phase1_step12000.json  # Full training log: loss, LR, grad_norm for all 12,000 steps
-└── assets/
-    ├── training_loss_clean.png   # Phase 1 training loss curve (Steps 0–12,000)
-    └── attention_map.png         # Cross-attention heatmap at Step 12,000
+├── assets/
+│   ├── training_loss_clean.png      # Phase 1 training loss curve (Steps 0–12,000)
+│   └── attention_map.png            # Cross-attention heatmap at Step 12,000
+└── LICENSE                        # MIT License
 ```
 
 > **Note on model weights:** Trained adapter checkpoints are not stored in this repository due to file size constraints. All model weights are hosted on the Hugging Face Hub at the link above. GitHub stores only the training and evaluation code.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for full details.
+
+The human-curated dataset (`data/train.csv`) is derived from data originally compiled by the GhanaNLP community. Please refer to their terms of use for dataset-specific licensing.
