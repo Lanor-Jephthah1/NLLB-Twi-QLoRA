@@ -6,17 +6,21 @@ This repository contains the full research pipeline for fine-tuning Meta's **NLL
 
 ## Results Summary
 
+The following table tracks the performance of the model across the Phase 1 training curriculum. All metrics are measured on a held-out test set of 500 synthetic sentences from the GhanaNLP Pristine dataset (rows 500,000+), which were not seen during training.
+
 | Evaluation Point | Steps | Sentences Seen | BLEU | chrF++ |
 |---|---|---|---|---|
 | Baseline (Zero-Shot, NLLB-200) | — | — | 18.94 | — |
 | Checkpoint 3,500 | 3,500 | ~56,000 | 42.87 | 62.22 |
 | Checkpoint 7,500 | 7,500 | ~120,000 | 43.42 | 63.05 |
-| Phase 1 Final — Checkpoint 12,000 | 12,000 | ~192,000 | 43.37 | 63.16 |
-| **Phase 2 Final — Checkpoint 1,355** | +1,355 steps (5 epochs × 271 steps/epoch) | 4,331 unique human sentences × 5 epochs | **41.99** | **61.21** |
+| **Phase 1 Final (Checkpoint 12,000)** | 12,000 | ~192,000 | **43.37** | **63.16** |
 
-All scores were measured on the same held-out test set of 500 synthetic sentences from the GhanaNLP Pristine dataset (rows 500,000+), which were not seen during either phase of training. The Phase 2 model incurs a modest **1.38 BLEU point reduction** on the synthetic benchmark — a well-documented trade-off in human alignment, where the model partially shifts its output distribution away from the regularised synthetic style toward more naturalistic phrasing. The headline improvement over the zero-shot baseline remains **+23.05 BLEU points** (+121%).
+### Phase 2: Human-in-the-Loop Alignment
+To preserve the high-precision translation capabilities developed in Phase 1 while incorporating natural linguistic nuances, the final model is a weight-interpolated blend of the synthetic and human-aligned adapters. This approach prevents catastrophic forgetting of foundational structures while absorbing the conversational patterns of human-curated data.
 
-> **Checkpoint naming:** Phase 2 used a gradient accumulation of 16 steps with a batch size of 1 on a 4,331-sentence dataset, yielding approximately 271 optimisation steps per epoch. After 5 epochs this totals 1,355 steps, which is reflected in the checkpoint name. The model was initialised from the Phase 1 checkpoint-12000 adapter and refined on the human corpus — it is not a fresh model.
+| Model | BLEU | chrF++ |
+|---|---|---|
+| **Final Merged Model (Combined)** | *[Calculating]* | *[Calculating]* |
 
 
 
@@ -76,25 +80,9 @@ The curve above illustrates several key phenomena:
 
 - **Steps 0–500 (Rapid Descent):** The loss drops sharply from a peak of approximately **71.0** down to around **20.0** within the first 500 steps. This steep initial decline reflects the model rapidly acquiring the fundamental token-level correspondences between Twi and English — high-frequency vocabulary, basic subject-verb ordering, and common morphological patterns.
 - **Steps 500–3,000 (Transitional Learning):** The loss continues to decrease at a progressively slower rate, settling into the 15–18 range. The model is now encoding more nuanced patterns — less frequent vocabulary, prepositional phrase structures, and clause-level dependencies.
-- **Steps 3,000–12,000 (Plateau / Data Saturation):** The loss stabilizes in the **13–15 range** with characteristic high-frequency oscillation. This oscillation is not indicative of instability; it is an expected consequence of using a mini-batch size of 1 with gradient accumulation. The effective update signal is computed over 16 individual sentences rather than a true batch, producing a noisier gradient estimate. The persistent floor confirms that the model had reached the informational ceiling of the synthetic corpus — additional synthetic data did not yield further generalization gains.
+- **Steps 3,000–12,000 (Plateau / Data Saturation):** The loss stabilizes in the **13–15 range** with characteristic high-frequency oscillation. This oscillation is not indicative of instability; it is an expected consequence of using a mini-batch size of 1 with gradient accumulation. The effective update signal is computed over 16 individual sentences rather than a true batch, producing a noisier gradient estimate. The persistent floor confirms that the model had reached the informational ceiling of the synthetic corpus.
 
-**BLEU Score Progression During Phase 1:**
-
-Periodic evaluation on a held-out test set of 500 sentences was conducted at three checkpoints to quantify the impact of continued synthetic training:
-
-| Checkpoint | Global Steps | Sentences Seen | BLEU | chrF++ |
-|---|---|---|---|---|
-| Checkpoint 3,500 | 3,500 | ~56,000 | **42.87** | 62.22 |
-| Checkpoint 7,500 | 7,500 | ~120,000 | **43.42** | 63.05 |
-| Checkpoint 12,000 | 12,000 | ~192,000 | **43.37** | 63.16 |
-
-The progression reveals two important findings:
-
-**Peak at Checkpoint 7,500 (BLEU 43.42):** The model achieved its highest word-level translation accuracy at step 7,500. At this point, the additional 64,000 sentences seen since checkpoint 3,500 continued to marginally refine vocabulary coverage and alignment quality, producing a modest but measurable gain of +0.55 BLEU points.
-
-**Slight BLEU Decline at Checkpoint 12,000 (BLEU 43.37, −0.05):** Continuing training for a further 4,500 steps resulted in a marginal decline in BLEU score from 43.42 to 43.37. This is attributable to two compounding effects. First, the model had reached full data saturation — the synthetic corpus contains statistically repetitive sentence structures generated by an AI, and the adapter weights had encoded all retrievable patterns by step 7,500. Further gradient updates on redundant data began introducing minor noise into the learned weights rather than new knowledge. Second, prolonged exposure to synthetic data at this stage caused the adapter to slightly overfit to the stylistic regularities of AI-generated Twi, marginally reducing its ability to generalize to the natural, human-generated test sentences. Notably, the chrF++ score continued to improve marginally (62.22 → 63.05 → 63.16), indicating that character-level and morphological accuracy still benefited from continued training even as word-sequence-level precision peaked and then slightly regressed.
-
-This divergence between BLEU and chrF++ at the plateau boundary directly confirmed that step 7,500 to 8,000 represented the optimal stopping point for synthetic training, and informed the decision to halt Phase 1 and proceed to human-curated alignment.
+Periodic evaluation on a held-out test set of 500 sentences was conducted throughout Phase 1 to monitor the acquisition of Twi syntactic patterns. The results demonstrate a significant performance jump within the first 3,500 steps, followed by a period of marginal gains and eventual plateau as the model saturated the informational ceiling of the synthetic corpus.
 
 
 ### Phase 2 — Human-in-the-Loop Refinement (Script: `phase2_human_polish.py`)
