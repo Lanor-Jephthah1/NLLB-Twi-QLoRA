@@ -98,6 +98,10 @@ The second phase fine-tuned the Phase 1 checkpoint on a curated dataset of **4,3
 
 **Distribution Shift (Loss Spike):** At the transition into Phase 2, the training loss spiked to approximately **35.5**. This is a well-documented phenomenon in multi-stage fine-tuning. The model's internal probability distribution — calibrated for predictable, syntactically regular synthetic sentences — was suddenly presented with colloquial Twi idioms, culturally embedded expressions, and non-literal phrasings. The subsequent rapid descent of the loss confirmed successful alignment to the new distribution rather than model divergence.
 
+**Training Loss Curve — Phase 2 (0 to 1,355 Steps):**
+
+![Training Loss Curve Phase 2](assets/training_loss_phase2.png)
+
 ---
 
 ## Interpretability: Cross-Attention Mapping
