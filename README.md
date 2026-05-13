@@ -1,61 +1,142 @@
-# 🌍 Twi-English Machine Translation via Two-Stage QLoRA
-**Democratizing Low-Resource African NLP on Consumer Hardware**
+# Bridging the Gap in African NLP: A Two-Stage QLoRA Framework for High-Fidelity Twi-English Translation
 
-This repository contains the training scripts, evaluation metrics, and interpretability logic for fine-tuning Meta's **NLLB-200 (600M)** model for the Ghanaian language **Akan (Twi)**. The entire pipeline was engineered to run locally on a consumer-grade laptop (RTX 2060, 6GB VRAM, 16GB RAM) by leveraging 4-bit Quantization and Parameter-Efficient Fine-Tuning (PEFT).
-
-## 🏆 Project Achievements
-- **Baseline BLEU (Zero-Shot):** `18.94`
-- **Final Model BLEU:** `43.42` (+24.48 point improvement)
-- **Hardware Constraint Defeated:** Successfully fine-tuned a 600M parameter model on a strict **6GB VRAM** ceiling using `NF4` quantization and gradient accumulation.
-
-## 🧠 Methodology: The "Two-Stage" Alignment
-Because Twi is a low-resource language, high-quality human data is extremely scarce. To achieve state-of-the-art results, we implemented a two-stage alignment process:
-
-### Phase 1: Synthetic Scaling (Grammar & Structure)
-- **Script:** `phase1_synthetic_training.py`
-- **Data:** ~192,000 synthetic Twi-English parallel sentences.
-- **Goal:** Inject foundational Twi vocabulary and morphological syntax into the model's latent space.
-- **Outcome:** The model learned to translate fluently but retained a slight "robotic" and direct translation accent.
-
-### Phase 2: Human-in-the-Loop Refinement (Culture & Nuance)
-- **Script:** `phase2_human_polish.py`
-- **Data:** 4,300 highly-curated, human-verified sentence pairs.
-- **Goal:** Correct the robotic accent, align the model with conversational slang, and inject cultural nuance.
-- **Outcome:** We deliberately dropped the learning rate from `2e-4` to `5e-5` to prevent catastrophic forgetting. The model successfully aligned to human preferences, resulting in natural, high-fidelity translations.
-
-## 📈 Training Metrics & Loss
-During Phase 2, the model experienced a "Distribution Shift" (a sudden loss spike) as it transitioned from predictable synthetic data to complex human data. It successfully converged shortly after.
-
-![Training Loss Curve](assets/loss_curve.png)
-*(Place your exported Matplotlib or WandB graph in the `assets` folder as `loss_curve.png`)*
-
-## 🔍 Interpretability: Cross-Attention Mapping
-To prove the model achieved deep semantic understanding rather than mere phrase memorization, we extracted the eager cross-attention weights. 
-- **Script:** `visualize_attention.py`
-
-![Attention Heatmap](assets/attention_map.png)
-*(Place your generated attention heatmap in the `assets` folder as `attention_map.png`)*
-*The heatmap demonstrates strong, confident diagonal mapping, correctly linking complex Twi phrasing directly to specific English targets.*
-
-## 💻 Repository Structure
-```text
-├── phase1_synthetic_training.py  # Stage 1: Massive synthetic ingestion
-├── phase2_human_polish.py        # Stage 2: Low-LR human alignment
-├── evaluate_model.py             # SacreBLEU evaluation script
-├── translate_playground.py       # Interactive CLI for real-time translation
-├── visualize_attention.py        # PyTorch hook script for attention mapping
-└── assets/                       # Images for README
-```
-
-## 🚀 How to Run the Playground
-Want to test the translation locally? Run the playground script:
-```bash
-python translate_playground.py
-```
-
-## ⚠️ Limitations
-- **Directional Bias:** While the base NLLB model is bi-directional, our fine-tuning heavily favored the **Twi → English** direction.
-- **Hardware Bottlenecks:** The 6GB VRAM limit forced a batch size of 1 (with 16 accumulation steps), preventing full-parameter unfreezing.
+This repository contains the full research pipeline for fine-tuning Meta's **NLLB-200 (600M parameter)** model on the Ghanaian language **Akan (Twi)**. The methodology is designed to operate under strict consumer-grade hardware constraints — specifically a 6GB VRAM ceiling — by combining 4-bit quantization with Parameter-Efficient Fine-Tuning (PEFT) via QLoRA. The project demonstrates that high-quality low-resource machine translation is achievable without access to large-scale GPU infrastructure.
 
 ---
-*This project serves as a blueprint for AI researchers and students across Africa looking to build high-quality NLP models without access to corporate-tier A100 GPU clusters.*
+
+## Results Summary
+
+| Evaluation Point | BLEU Score | chrF++ Score |
+|---|---|---|
+| Baseline (Zero-Shot, NLLB-200) | 18.94 | — |
+| Checkpoint 3,500 (Step 56k sentences) | 42.87 | 62.22 |
+| Checkpoint 7,500 (Step 120k sentences) | 43.42 | 63.05 |
+| Checkpoint 12,000 (Step 192k sentences) | 43.37 | 63.16 |
+
+A BLEU score above 40 is recognized in the machine translation literature as indicative of high-quality, fluency-preserving translation. Achieving this threshold for a low-resource African language on consumer hardware represents a significant methodological contribution.
+
+---
+
+## Hardware Environment
+
+- **GPU:** NVIDIA RTX 2060 (6GB VRAM)
+- **RAM:** 16GB System RAM
+- **Storage:** Training outputs offloaded to a secondary drive to prevent OS drive saturation
+- **Quantization:** 4-bit NormalFloat (NF4) via `bitsandbytes`
+- **Effective Batch Size:** 16 (achieved via `per_device_train_batch_size=1` with `gradient_accumulation_steps=16`)
+
+The system RAM limitation necessitated streaming-based dataset ingestion with chunk-wise tokenization. Sequence lengths were truncated to `max_length=128` to keep attention matrix memory within bounds during Phase 1.
+
+---
+
+## Methodology: Two-Stage Alignment
+
+The central challenge in Twi NLP is the near-absence of large-scale, high-quality human-verified data. To address this, a two-stage training pipeline was designed to progressively align the model — first for grammatical structure, then for cultural and conversational nuance.
+
+### Phase 1 — Synthetic Data Scaling (Scripts: `phase1_synthetic_training.py`)
+
+The first phase ingested approximately **192,000 Twi-English parallel sentences** from the GhanaNLP Pristine dataset, a large-scale synthetic corpus generated via the Gemini API. Training ran for 12,000 global steps with a learning rate of `2e-4` using a cosine decay schedule.
+
+**Objective:** Establish foundational Twi morphological and syntactic patterns within the LoRA adapter weights.
+
+**Outcome:** The model converged to a stable loss floor of approximately 13.5, as shown in the figure below, but retained a slightly mechanical translation style characteristic of AI-generated training data.
+
+**Training Loss Curve — Phase 1 (0 to 12,000 Steps):**
+
+![Training Loss Curve](assets/training_loss_clean.png)
+
+The curve above illustrates several key phenomena:
+
+- **Steps 0–500 (Rapid Descent):** The loss drops sharply from a peak of approximately **71.0** down to around **20.0** within the first 500 steps. This steep initial decline reflects the model rapidly acquiring the fundamental token-level correspondences between Twi and English — high-frequency vocabulary, basic subject-verb ordering, and common morphological patterns.
+- **Steps 500–3,000 (Transitional Learning):** The loss continues to decrease at a progressively slower rate, settling into the 15–18 range. The model is now encoding more nuanced patterns — less frequent vocabulary, prepositional phrase structures, and clause-level dependencies.
+- **Steps 3,000–12,000 (Plateau / Data Saturation):** The loss stabilizes in the **13–15 range** with characteristic high-frequency oscillation. This oscillation is not indicative of instability; it is an expected consequence of using a mini-batch size of 1 with gradient accumulation. The effective update signal is computed over 16 individual sentences rather than a true batch, producing a noisier gradient estimate. The persistent floor confirms that the model had reached the informational ceiling of the synthetic corpus — additional synthetic data did not yield further generalization gains.
+
+This plateau directly informed the decision to terminate Phase 1 at step 12,000 and transition to human-curated data rather than continuing synthetic training.
+
+### Phase 2 — Human-in-the-Loop Refinement (Script: `phase2_human_polish.py`)
+
+The second phase fine-tuned the Phase 1 checkpoint on a curated dataset of **4,331 human-verified Twi-English sentence pairs** for 5 epochs with a reduced learning rate of `5e-5`.
+
+**Objective:** Correct the robotic stylistic artifacts inherited from synthetic data by aligning the model with natural, conversational Twi.
+
+**Catastrophic Forgetting Mitigation:** The learning rate was deliberately reduced by a factor of 4 (`2e-4` → `5e-5`) to perform conservative weight updates. This ensured the adapter retained the grammatical foundation from Phase 1 while gradually internalizing the stylistic patterns of the human corpus.
+
+**Distribution Shift (Loss Spike):** At the transition into Phase 2, the training loss spiked to approximately **35.5**. This is a well-documented phenomenon in multi-stage fine-tuning. The model's internal probability distribution — calibrated for predictable, syntactically regular synthetic sentences — was suddenly presented with colloquial Twi idioms, culturally embedded expressions, and non-literal phrasings. The subsequent rapid descent of the loss confirmed successful alignment to the new distribution rather than model divergence.
+
+---
+
+## Interpretability: Cross-Attention Mapping
+
+To verify that the model achieved genuine semantic alignment rather than surface-level phrase substitution, cross-attention weights were extracted using PyTorch's `eager` attention implementation. The script `visualize_attention.py` generates a heatmap of the decoder's cross-attention over encoder source tokens.
+
+**Test Sentence (Twi):**
+> *Nkɔsoɔ a aba abisadeɛ nyansahu mu no resesɛ kwan a nipa fa so ne wɔn ho di nkitaho na wɔyɛ adwuma wɔ wiase baabiara.*
+
+**Model Output (English):**
+> *The progress that has come in application science is changing the path that people take to connect with themselves and do work anywhere in the world.*
+
+**Cross-Attention Heatmap — Step 12,000:**
+
+![Attention Heatmap](assets/attention_map.png)
+
+The heatmap displays source Twi tokens along the x-axis and generated English tokens along the y-axis. Each cell indicates the normalized attention weight the decoder assigned to a given source token when generating a specific target token.
+
+Key observations from the map:
+
+- The attention pattern follows a **near-diagonal trajectory**, confirming that the model processes the source sentence in a left-to-right order consistent with Twi's Subject-Verb-Object structure.
+- The complex compound phrase `_abis` / `_adeɛ` / `_nyansa` (corresponding to *abisadeɛ nyansahu* — "application science") shows concentrated attention precisely aligned to the English tokens `_application` and `_science`, demonstrating multi-token semantic composition.
+- The Twi phrase `_adwuma` (*work/labour*) and `_wiase` (*world*) show clear attention alignment to `_work` and `_world` respectively, confirming the model's ability to resolve culturally specific lexical items to their correct conceptual targets.
+- The high-attention yellow column on the right edge corresponds to the `</s>` (end-of-sequence) token, which the model consistently attends to during decoding termination — a normal and expected behaviour.
+
+---
+
+## LoRA Configuration
+
+| Parameter | Value |
+|---|---|
+| Base Model | `facebook/nllb-200-distilled-600M` |
+| LoRA Rank (`r`) | 16 |
+| LoRA Alpha | 32 |
+| Dropout | 0.05 |
+| Target Modules | `q_proj`, `v_proj` |
+| Trainable Parameters | ~2.3 million |
+| Total Model Parameters | ~600 million |
+| Adapter Size on Disk | ~10–20 MB per checkpoint |
+
+---
+
+## Checkpointing Strategy
+
+Checkpoints were saved at every 500 training steps. Because QLoRA only persists the adapter weights (not the frozen base model), each checkpoint occupies approximately 10–20 MB rather than the 2.4 GB required to save the full model state. This made fault-tolerant, resumable training practical on consumer storage.
+
+---
+
+## Deployment
+
+The trained LoRA adapter has been published to the Hugging Face Hub. The base model weights are loaded dynamically from Meta's public repository at inference time, meaning only the lightweight adapter (~15 MB) needs to be distributed.
+
+A Gradio-based inference interface was built with custom Twi orthography normalization logic, mapping non-standard keyboard input variants of `ɛ` and `ɔ` to their correct Unicode codepoints before tokenization. This step was critical for minimizing out-of-vocabulary (OOV) token errors in real-world user input.
+
+---
+
+## Limitations
+
+- **Directional Bias:** Fine-tuning was applied exclusively in the Twi → English direction. While the base model retains bi-directional capabilities, the English → Twi direction was not directly optimized and relies on the unrefined base weights.
+- **Hardware Constraints:** The 6GB VRAM ceiling prevented full-parameter fine-tuning and restricted the effective batch size, resulting in high-variance gradient estimates and noisy loss curves.
+- **Data Volume:** The 4,331 human-verified sentences in Phase 2 represent a small corpus relative to the synthetic data. Some synthetic translation artifacts may still appear in edge-case outputs.
+- **Evaluation Scope:** Evaluation was conducted exclusively on the GhanaNLP Pristine test split. Performance on out-of-domain corpora (medical, legal, technical text) has not been assessed.
+
+---
+
+## Repository Structure
+
+```
+├── phase1_synthetic_training.py  # Stage 1: Synthetic corpus ingestion and scaling
+├── phase2_human_polish.py        # Stage 2: Human-aligned low-LR refinement
+├── visualize_attention.py        # Cross-attention extraction and heatmap generation
+├── plot_history.py               # Local loss curve plotting from trainer_state.json
+├── translate_playground.py       # Interactive CLI for real-time translation testing
+└── assets/
+    ├── training_loss_clean.png   # Phase 1 training loss curve (Steps 0–12,000)
+    └── attention_map.png         # Cross-attention heatmap at Step 12,000
+```
