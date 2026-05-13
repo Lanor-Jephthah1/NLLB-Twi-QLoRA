@@ -19,9 +19,9 @@ A BLEU score above 40 is recognized in the machine translation literature as ind
 
 ## Trained Model
 
-The final LoRA adapter weights are published on the Hugging Face Hub. The adapter is approximately 15MB. At inference time, the script automatically merges it with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB) which is loaded directly from the Hugging Face Hub. You do not need to download or manage the base model manually.
+The final human-polished LoRA adapter will be published to the Hugging Face Hub upon completion of Phase 2 training. The adapter is approximately 15MB. At inference time, it merges automatically with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB) which loads directly from the Hugging Face Hub.
 
-**Model Card:** https://huggingface.co/mclanorjeff/twi-english-nllb-lora
+**Model Card:** *(link will be updated upon final model release)*
 
 ---
 
@@ -145,6 +145,8 @@ A Gradio-based inference interface was built with custom Twi orthography normali
 ├── visualize_attention.py        # Cross-attention extraction and heatmap generation
 ├── plot_history.py               # Local loss curve plotting from trainer_state.json
 ├── translate_playground.py       # Interactive CLI for real-time translation testing
+├── metrics/
+│   └── trainer_state_phase1_step12000.json  # Full training log: loss, LR, grad_norm for all 12,000 steps
 └── assets/
     ├── training_loss_clean.png   # Phase 1 training loss curve (Steps 0–12,000)
     └── attention_map.png         # Cross-attention heatmap at Step 12,000
