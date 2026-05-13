@@ -6,12 +6,12 @@ This repository contains the full research pipeline for fine-tuning Meta's **NLL
 
 ## Results Summary
 
-| Evaluation Point | BLEU Score | chrF++ Score |
-|---|---|---|
-| Baseline (Zero-Shot, NLLB-200) | 18.94 | — |
-| Checkpoint 3,500 (Step 56k sentences) | 42.87 | 62.22 |
-| Checkpoint 7,500 (Step 120k sentences) | 43.42 | 63.05 |
-| Checkpoint 12,000 (Step 192k sentences) | 43.37 | 63.16 |
+| Evaluation Point | Steps | Sentences Seen | BLEU Score | chrF++ Score |
+|---|---|---|---|---|
+| Baseline (Zero-Shot, NLLB-200) | — | — | 18.94 | — |
+| Checkpoint 3,500 | 3,500 | ~56,000 | 42.87 | 62.22 |
+| Checkpoint 7,500 | 7,500 | ~120,000 | 43.42 | 63.05 |
+| Checkpoint 12,000 | 12,000 | ~192,000 | 43.37 | 63.16 |
 
 A BLEU score above 40 is recognized in the machine translation literature as indicative of high-quality, fluency-preserving translation. Achieving this threshold for a low-resource African language on consumer hardware represents a significant methodological contribution.
 
