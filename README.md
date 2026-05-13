@@ -16,6 +16,10 @@ The following table tracks the performance of the model across the Phase 1 train
 | Phase 1 Final (Checkpoint 12,000) | 12,000 | ~192,000 | 43.37 | 63.16 |
 | **Final Human-Aligned Model (Phase 2)** | **+1,355 human steps** | **4,331 unique sentences** | **41.99** | **61.21** |
 
+**Evaluation Metrics Progression:**
+
+![Evaluation Metrics Progression](assets/evaluation_metrics.png)
+
 ### Conclusion
 The final model represents a successful two-stage alignment: establishing high-precision translation logic through large-scale synthetic data (Phase 1), followed by refining the linguistic nuance through human-verified alignment (Phase 2). Achieving a BLEU score of **41.99** on a low-resource language like Twi, while operating under a **6GB VRAM hardware constraint**, demonstrates the viability of this methodology for accessible NLP research.
 
