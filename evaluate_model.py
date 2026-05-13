@@ -7,7 +7,8 @@ from sacrebleu.metrics import BLEU, CHRF
 from tqdm import tqdm
 
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
-ADAPTER_DIR = "F:/twi_translation_model_human"
+# checkpoint-1355 is the final epoch (epoch 5/5) of Phase 2 human-polished training
+ADAPTER_DIR = "F:/twi_translation_model_human/checkpoint-1355"
 
 SRC_LANG = "aka_GH"
 TGT_LANG = "eng_Latn"
