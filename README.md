@@ -14,7 +14,7 @@ The following table tracks the performance of the model across the Phase 1 train
 | Checkpoint 3,500 | 3,500 | ~56,000 | 42.87 | 62.22 |
 | Checkpoint 7,500 | 7,500 | ~120,000 | 43.42 | 63.05 |
 | Phase 1 Final (Checkpoint 12,000) | 12,000 | ~192,000 | 43.37 | 63.16 |
-| **Final Human-Aligned Model (Phase 2)** | **+1,355 human steps** | **4,331 unique sentences** | **41.99** | **61.21** |
+| **Final Human-Aligned Model (Phase 2)** | **13,355 (Cumulative)** | **~196,331 (192k Synth + 4.3k Human)** | **41.99** | **61.21** |
 
 **Evaluation Metrics Progression:**
 
