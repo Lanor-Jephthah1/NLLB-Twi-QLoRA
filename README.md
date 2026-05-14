@@ -43,11 +43,14 @@ The 4,331-sentence human-verified dataset (`data/train.csv`) used in the refinem
 
 ---
 
-## Trained Model
+## Live Deployment
 
-The final human-polished LoRA adapter will be published to the Hugging Face Hub upon completion of Phase 2 training. The adapter is approximately 15MB. At inference time, it merges automatically with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB) which loads directly from the Hugging Face Hub.
+The final human-aligned model and translation interface are live on Hugging Face:
 
-**Model Card:** *(link will be updated upon final model release)*
+- **🚀 Translator Space**: [NLLB-Twi-Translator](https://huggingface.co/spaces/mclanorjeff/NLLB-Twi-Translator)
+- **📦 Model Adapter**: [NLLB-Twi-Human-Aligned](https://huggingface.co/mclanorjeff/NLLB-Twi-Human-Aligned)
+
+The adapter is approximately 15MB. At inference time, it merges automatically with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB).
 
 ---
 

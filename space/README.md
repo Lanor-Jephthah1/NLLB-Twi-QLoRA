@@ -1,6 +1,6 @@
 ---
 title: NLLB Twi-English Translator (Phase 2)
-emoji: 🇬🇭
+emoji: 🌍
 colorFrom: blue
 colorTo: green
 sdk: gradio

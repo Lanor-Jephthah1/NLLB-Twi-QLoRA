@@ -4,8 +4,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from peft import PeftModel
 
 # --- CONFIGURATION ---
-# Replace this with your actual Model Repo ID after you upload the adapter!
-ADAPTER_ID = "Lanor-Jephthah1/NLLB-Twi-Human-Aligned" 
+ADAPTER_ID = "mclanorjeff/NLLB-Twi-Human-Aligned" 
 BASE_MODEL = "facebook/nllb-200-distilled-600M"
 
 print("Loading model and tokenizer... this may take a few minutes.")
