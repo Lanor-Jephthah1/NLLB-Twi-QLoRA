@@ -6,7 +6,7 @@ This repository contains the full research pipeline for fine-tuning Meta's **NLL
 
 ## Results Summary
 
-The following table tracks the performance of the model across the Phase 1 training curriculum. All metrics are measured on a held-out test set of 500 synthetic sentences from the GhanaNLP Pristine dataset (rows 500,000+), which were not seen during training.
+The following table tracks the performance of the model across the **two-stage training curriculum**. All metrics are measured on a held-out test set of 500 synthetic sentences from the GhanaNLP Pristine dataset (rows 500,000+), which were not seen during training.
 
 | Evaluation Point | Steps | Sentences Seen | BLEU | chrF++ |
 |---|---|---|---|---|
@@ -177,16 +177,24 @@ A Gradio-based inference interface was built with custom Twi orthography normali
 ├── phase2_human_polish.py        # Stage 2: Human-aligned low-LR refinement
 ├── evaluate_model.py             # SacreBLEU and chrF++ evaluation on 500 test sentences
 ├── visualize_attention.py        # Cross-attention extraction and heatmap generation
-├── plot_history.py               # Local loss curve plotting from trainer_state.json
+├── plot_history.py               # Local loss curve plotting for Phase 1
+├── plot_phase2_loss.py           # Local loss curve plotting for Phase 2
+├── plot_metrics.py               # Comparative metrics progression plotting
 ├── translate_playground.py       # Interactive CLI for real-time translation testing
 ├── data/
-│   └── train.csv                    # 4,331 human-verified Twi-English sentence pairs (Phase 2)
+│   └── train.csv                 # 4,331 human-verified Twi-English sentence pairs (Phase 2)
+├── space/
+│   ├── app.py                    # Hugging Face Space Gradio interface
+│   ├── requirements.txt          # Space dependencies
+│   └── README.md                 # Space metadata
 ├── metrics/
-│   └── trainer_state_phase1_step12000.json  # Full training log: loss, LR, grad_norm for all 12,000 steps
+│   └── trainer_state_phase1_step12000.json  # Full Phase 1 training log
 ├── assets/
-│   ├── training_loss_clean.png      # Phase 1 training loss curve (Steps 0–12,000)
-│   └── attention_map.png            # Cross-attention heatmap at Step 12,000
-└── LICENSE                        # MIT License
+│   ├── training_loss_clean.png   # Phase 1 training loss curve
+│   ├── training_loss_phase2.png  # Phase 2 training loss curve
+│   ├── evaluation_metrics.png    # BLEU/chrF++ progression graph
+│   └── attention_map.png         # Cross-attention heatmap at Step 12,000
+└── LICENSE                       # MIT License
 ```
 
 > **Note on model weights:** Trained adapter checkpoints are not stored in this repository due to file size constraints. All model weights are hosted on the Hugging Face Hub at the link above. GitHub stores only the training and evaluation code.

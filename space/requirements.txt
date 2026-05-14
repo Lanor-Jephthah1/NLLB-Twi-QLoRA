@@ -2,7 +2,6 @@ torch
 transformers
 peft
 gradio
-bitsandbytes
 scipy
 safetensors
 sentencepiece
