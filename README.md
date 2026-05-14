@@ -23,6 +23,9 @@ The final model represents a successful two-stage alignment: establishing high-p
 
 The transition from Phase 1 to Phase 2 resulted in a modest 1.38 BLEU point reduction on synthetic benchmarks—a documented phenomenon where the model trades "robotic" precision for natural, conversational fluency. This human-aligned adapter is the primary output of this research and is optimized for real-world translation tasks.
 
+### Analysis of the Phase 1 Plateau (Steps 7,500–12,000)
+As seen in the results table, the model achieved its peak synthetic performance at **Step 7,500 (43.42 BLEU)**. The final 4,500 steps of Phase 1 resulted in a negligible change (-0.05 BLEU), signaling a clear **Informational Plateau**. This plateau occurred because the model had fully internalized the syntactic regularities of the 192,000 synthetic sentences. Further training on this specific corpus would have likely led to overfitting on synthetic artifacts rather than genuine linguistic gains. This observation was the primary catalyst for transitioning to **Phase 2**, shifting the focus from data volume to data quality.
+
 ## Data Sources & Acknowledgements
 
 This project would not have been possible without the foundational work of the **GhanaNLP community**.
