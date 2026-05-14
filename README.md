@@ -39,8 +39,8 @@ The 4,331-sentence human-verified dataset (`data/train.csv`) used in the refinem
 
 The final human-aligned model and translation interface are live on Hugging Face:
 
-- **🚀 Translator Space**: [NLLB-Twi-Translator](https://huggingface.co/spaces/mclanorjeff/NLLB-Twi-Translator)
-- **📦 Model Adapter**: [NLLB-Twi-Human-Aligned](https://huggingface.co/mclanorjeff/NLLB-Twi-Human-Aligned)
+- **Translator Space**: [NLLB-Twi-Translator](https://huggingface.co/spaces/mclanorjeff/NLLB-Twi-Translator)
+- **Model Adapter**: [NLLB-Twi-Human-Aligned](https://huggingface.co/mclanorjeff/NLLB-Twi-Human-Aligned)
 
 The adapter is approximately 15MB. At inference time, it merges automatically with Meta's frozen base model (`facebook/nllb-200-distilled-600M`, ~2.4GB).
 
