@@ -1,4 +1,4 @@
-# Bridging the Gap in African NLP: A Two-Stage QLoRA Framework for High-Fidelity Twi-English Translation
+# A Two-Stage QLoRA Framework for High-Fidelity Twi-English Translation
 
 This repository contains the full research pipeline for fine-tuning Meta's **NLLB-200 (600M parameter)** model on the Ghanaian language **Akan (Twi)**. The methodology is designed to operate under strict consumer-grade hardware constraints, specifically a 6GB VRAM ceiling, by combining 4-bit quantization with Parameter-Efficient Fine-Tuning (PEFT) via QLoRA. The project demonstrates that high-quality low-resource machine translation is achievable without access to large-scale GPU infrastructure.
 
