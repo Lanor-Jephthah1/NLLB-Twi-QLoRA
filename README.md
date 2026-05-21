@@ -142,6 +142,8 @@ The trained LoRA adapter has been published to the Hugging Face Hub. A Gradio-ba
 - **Data Volume:** The 4,331 human-verified sentences in Phase 2 represent a small corpus relative to the synthetic data.
 - **Evaluation Scope:** Evaluation was conducted exclusively on the GhanaNLP Pristine test split.
 
+ The model achieves the stated BLEU on literal, declarative Twi text (the distribution of our synthetic test set). Performance on proverbs and figurative language is untested and likely lower, as such constructions were rare in training data.
+
 ## Repository Structure
 
 ```
