@@ -18,7 +18,7 @@ To establish a comprehensive understanding of low-resource Twi-English translati
 ---
 
 ### Paradigm A: Single-Stage Direct Fine-Tuning
-* **Model Repositories:** `Lanor-and-Nick/twi-english-nllb-lora` (Team) \| `mclanorjeff/twi-english-nllb-lora` (Author Copy)
+* **Model Repositories:** `Lanor-and-Nick/twi-english-nllb-lora` (Team) \| `mclanorjeff/twi-english-nllb-lora` 
 * **Dataset Splitting:** Built using a rigorous, uncontaminated **90/10 split** of the human-verified dataset.
   * **Train Set:** 3,888 human sentences.
   * **Validation Set:** 431 human sentences (completely hidden from the model during training).
