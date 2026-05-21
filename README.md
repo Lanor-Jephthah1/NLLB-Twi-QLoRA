@@ -202,6 +202,12 @@ The trained LoRA adapter has been published to the Hugging Face Hub. A Gradio-ba
 
 > **Note on model weights:** Trained adapter checkpoints are not stored in this repository due to file size constraints. All model weights are hosted on the Hugging Face Hub at the link above.
 
+## Future Outlook & A Heartfelt Note
+
+This project was built out of a deep, personal passion for bringing low-resource African languages into the modern NLP spotlight. As student/independent researchers operating under strict consumer-hardware limits, our greatest hope is that this repository serves as a useful, inspiring stepping stone for others working on low-resource machine translation. 
+
+If this work helps you, inspires your research, or if you simply want to support the growth of Ghanaian NLP, a **Star (⭐)** on this repository would mean the world to us. We hope this work is seen, recognized, and built upon in the future to help bridge the digital language gap. 🇬🇭❤️
+
 ## License
 
 This project is licensed under the **MIT License**. The human-curated dataset (`data/train.csv`) is derived from data originally compiled by the GhanaNLP community.
