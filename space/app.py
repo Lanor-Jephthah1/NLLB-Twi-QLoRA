@@ -17,6 +17,9 @@ def translate(text):
     if not text.strip():
         return ""
     
+    # Automatic character mapping for English keyboards
+    text = text.replace('3', 'ɛ').replace('c', 'ɔ').replace('C', 'Ɔ')
+    
     inputs = tokenizer(text, return_tensors="pt", max_length=128, truncation=True)
     with torch.no_grad():
         output_ids = model.generate(
@@ -44,52 +47,40 @@ footer {visibility: hidden}
     border-radius: 10px;
     margin-bottom: 20px;
 }
-.twi-btn {
-    font-size: 20px !important;
-    font-weight: bold !important;
-}
 """
 
 with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="blue")) as demo:
     with gr.Column(elem_classes="header-box"):
         gr.Markdown("# 🇬🇭 NLLB-Twi Translator (Phase 2)")
         gr.Markdown("### Professional Human-Aligned Machine Translation")
-        gr.Markdown("This model uses a two-stage QLoRA approach, combining 192k synthetic sentences with human-verified polish for natural Twi-to-English translation.")
+        gr.Markdown("This model uses a two-stage QLoRA approach, combining 192k synthetic sentences with human-verified polish.")
 
     with gr.Row():
         with gr.Column(scale=1):
             input_text = gr.Textbox(
                 label="Enter Twi Text", 
-                placeholder="Kyerɛ me biribi... (Tell me something...)",
-                lines=5
+                placeholder="Type here... (Tip: Use '3' for 'ɛ' and 'c' for 'ɔ')",
+                lines=8
             )
-            
-            with gr.Row():
-                btn_eps = gr.Button("ɛ", elem_classes="twi-btn")
-                btn_open_o = gr.Button("ɔ", elem_classes="twi-btn")
-            
-            translate_btn = gr.Button("Translate to English", variant="primary")
         
         with gr.Column(scale=1):
-            output_text = gr.Textbox(label="English Translation", lines=5, interactive=False)
+            output_text = gr.Textbox(label="English Translation", lines=8, interactive=False)
+
+    with gr.Row():
+        gr.Column(scale=1) # Spacer
+        translate_btn = gr.Button("Translate to English", variant="primary", scale=1)
+        gr.Column(scale=1) # Spacer
 
     gr.Examples(
         examples=[
             ["Meresua Twi kasa kyerɛ wo."],
-            ["Ɛyɛ me fɛ sɛ woaba ha."],
+            ["S3 obi kcc sukuu a, 3s3 s3 obc mbcden."],
             ["Mepa wo kyɛw, kyerɛ me kwan a ɛkɔ sukuu hɔ."],
             ["Ghana yɛ ɔman a ɛyɛ fɛ paa."],
         ],
         inputs=input_text
     )
 
-    # Keyboard logic
-    def add_char(text, char):
-        return text + char
-
-    btn_eps.click(add_char, [input_text, gr.State("ɛ")], input_text)
-    btn_open_o.click(add_char, [input_text, gr.State("ɔ")], input_text)
-    
     translate_btn.click(translate, inputs=input_text, outputs=output_text)
 
 if __name__ == "__main__":
