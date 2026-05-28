@@ -1,26 +1,26 @@
-import os
+import os 
 import torch
-import random
+import random 
 from transformers import (
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    Seq2SeqTrainingArguments,
+    AutoModelForSeq2SeqLM, # loads the NLLB from huggingface based on its repo name
+    AutoTokenizer, 
+    Seq2SeqTrainingArguments, # holds all training configs. 
     Seq2SeqTrainer,
     DataCollatorForSeq2Seq,
-    BitsAndBytesConfig
-)
+    BitsAndBytesConfig # used to configure 4/8 bit quantization
+) 
+
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, PeftModel
-from datasets import load_dataset
+from datasets import load_dataset 
 
 # Paths and model identifiers
-MODEL_NAME = "facebook/nllb-200-distilled-600M"
+MODEL_NAME = "facebook/nllb-200-distilled-600M" 
 OUTPUT_DIR = "F:/twi_translation_model"
-ADAPTER_DIR = os.path.join(OUTPUT_DIR, "lora_adapter")
+ADAPTER_DIR = os.path.join(OUTPUT_DIR, "lora_adapter") #  Combines the output directory with a subfolder name to designate where the final trained LoRA adapter weight will be saved
 
-# Controls which chunk of the dataset to ingest.
 # Increment START_ROW by NUM_ROWS when moving to the next chunk.
 START_ROW = 0
-NUM_ROWS = 500000
+NUM_ROWS = 500000 # initial planned limit for data injection to 500k pairs.
 
 TWI_LANG = "aka_GH"
 ENG_LANG = "eng_Latn"
@@ -31,16 +31,18 @@ BIDIRECTIONAL = True
 
 print(f"Loading tokenizer {MODEL_NAME}...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, src_lang=TWI_LANG)
+# takes raw words and turns them into numeric IDs that the neural network can process
 
 print("Loading dataset in streaming mode...")
 dataset = load_dataset(
     "ghananlpcommunity/pristine-twi-english-parallel-sentences",
-    split="train",
-    streaming=True
+    split="train", #loads training split
+    streaming=True #avoids downloading the entire dataset
 )
 
 chunked_dataset = dataset.skip(START_ROW).take(NUM_ROWS)
 
+# implements bidirectional logic
 def preprocess_function(examples):
     if BIDIRECTIONAL and random.random() > 0.5:
         source_lang, target_lang = ENG_LANG, TWI_LANG
