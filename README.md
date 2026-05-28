@@ -165,12 +165,12 @@ The trained LoRA adapter has been published to the Hugging Face Hub. A Gradio-ba
 
 ## Limitations
 
-- **Directional Bias:** Fine-tuning was applied exclusively in the Twi → English direction.
+- **Directional Bias & Phase Specialization:** While Phase 1 (Synthetic Scaling) was trained bidirectionally (`BIDIRECTIONAL = True`) to build general translation mappings, Phase 2 (Human Alignment) was trained exclusively in the Twi → English direction using the 4,331 human-verified pairs. Consequently, the final human-aligned model is highly specialized for Twi → English translation, and performing English → Twi translations with this adapter is not optimized.
 - **Hardware Constraints:** The 6GB VRAM ceiling restricted the effective batch size, resulting in high-variance gradient estimates.
 - **Data Volume:** The 4,331 human-verified sentences in Phase 2 represent a small corpus relative to the synthetic data.
 - **Evaluation Scope:** Evaluation was conducted exclusively on the GhanaNLP Pristine test split.
 
- The model achieves the stated BLEU on literal, declarative Twi text (the distribution of our synthetic test set). Performance on proverbs and figurative language is untested and likely lower, as such constructions were rare in training data.
+The model achieves the stated BLEU on literal, declarative Twi text (the distribution of our synthetic test set). Performance on proverbs and figurative language is untested and likely lower, as such constructions were rare in training data.
 
 ## Repository Structure
 
