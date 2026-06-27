@@ -123,17 +123,19 @@ The second phase fine-tuned the Phase 1 checkpoint on a curated dataset of **4,3
 
 ![Training Loss Curve Phase 2](assets/training_loss_phase2.png)
 
-## Interpretability: Cross-Attention Mapping
+ ## Interpretability: Cross-Attention Mapping
 
-To verify that the model achieved genuine semantic alignment rather than surface-level phrase substitution, cross-attention weights were extracted using PyTorch's `eager` attention implementation. The script `visualize_attention.py` generates a heatmap of the decoder's cross-attention over encoder source tokens.
+To verify that the model achieved genuine semantic alignment rather than surface-level phrase substitution, cross-
+attention weights were extracted using PyTorch's `eager` attention implementation. The script `visualize_attention.py`
+generates a heatmap of the decoder's cross-attention over encoder source tokens.
 
 **Test Sentence (Twi):**
 > *Nkɔsoɔ a aba abisadeɛ nyansahu mu no resesɛ kwan a nipa fa so ne wɔn ho di nkitaho na wɔyɛ adwuma wɔ wiase baabiara.*
 
 **Model Output (English):**
-> *The progress that has come in application science is changing the path that people take to connect with themselves and do work anywhere in the world.*
+> *Advances in application science are changing the way people communicate and work around the world.*
 
-**Cross-Attention Heatmap: Step 12,000**
+**Cross-Attention Heatmap: Phase 2 Final**
 
 ![Attention Heatmap](assets/attention_map.png)
 
@@ -141,7 +143,8 @@ The heatmap displays source Twi tokens along the x-axis and generated English to
 
 - The attention pattern follows a **near-diagonal trajectory**, confirming that the model processes the source sentence in a left-to-right order consistent with Twi's Subject-Verb-Object structure.
 - The complex compound phrase corresponding to *abisadeɛ nyansahu* ("application science") shows concentrated attention precisely aligned to the English tokens.
-- The Twi phrases for "work" and "world" show clear attention alignment to their correct English targets.
+- The multi-token Twi reflexive phrase *ne wɔn ho di nkitaho* is successfully translated to a single English verb *communicate*, with a clear attention alignment block.
+- The Twi phrases for *wɔyɛ adwuma* ("work") and *wiase baabiara* ("around the world") show clean diagonal attention alignment to their correct English targets.
 
 ## LoRA Configuration
 
